@@ -88,6 +88,35 @@ pipeline {
         }
       }
     }
+    stage('Artefact Analysis') {
+      parallel {
+        stage('Contianer Scan') {
+          steps {
+            container('docker-tools') {
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh "grype ${APP_NAME}"
+              }
+            }
+          }
+        }
+        stage('Kubesec') {
+          steps {
+            container('docker-tools') {
+              sh 'kubesec scan k8s.yaml'
+            }
+          }
+        }
+        stage('Container Audit') {
+          steps {
+            container('docker-tools') {
+              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh "dockle ${APP_NAME}"
+              }
+            }
+          }
+        }
+      }
+    }
     stage('Publish') {
       steps {
         container('docker-tools') {
