@@ -38,6 +38,18 @@ pipeline {
             }
           }
         }
+        stage('Spot Bugs - Security') {
+                  steps {
+                    container('maven') {
+                      sh './mvnw compile spotbugs:check || exit 0'
+                    }
+                  }
+                  post {
+                    always {
+                      archiveArtifacts allowEmptyArchive: true, artifacts: 'target/spotbugsXml.xml', fingerprint: true, onlyIfSuccessful: false
+                    }
+                  }
+                }
       }
     }
     stage('Package') {
